@@ -5,8 +5,8 @@ import (
 )
 
 type Appointment struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty"`
-	ProfessorId primitive.ObjectID `bson:"professor_id"`
-	StudentId   primitive.ObjectID `bson:"student_id"`
-	TimeSlot    string             `bson:"time_slot"`
+	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	ProfessorId primitive.ObjectID `json:"professorId" bson:"professor_id"`
+	StudentId   primitive.ObjectID `json:"studentId" bson:"student_id"`
+	TimeSlot    string             `json:"timeslot" bson:"time_slot"`
 }
