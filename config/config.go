@@ -26,7 +26,7 @@ func LoadConfig() *Config {
 	}
 
 	// get the value of database name from .env file
-	database := os.Getenv("DATABASE")
+	database := os.Getenv("MONGO_DB")
 	if database == "" {
 		log.Fatal("Database name is empty")
 	}
