@@ -11,8 +11,8 @@ import (
 )
 
 // Intializing MongoDb and connecting to its instance
-var Mongoclient *mongo.Client
-func InitMongo(uri string) *mongo.Client{
+
+func InitMongo(uri string) (*mongo.Client,error){
 	ctx,cancel :=context.WithTimeout(context.Background(),10*time.Second)
 	defer cancel()
 
@@ -30,14 +30,10 @@ func InitMongo(uri string) *mongo.Client{
 	}
 
 	fmt.Println("Connected to mongoDB")
-	Mongoclient = client
-	return client
+	return client,nil
 } 
 
-func GetCollection(dbName,collectionName string)*mongo.Collection{
-	if Mongoclient==nil{
-		log.Fatal("mongoDB clien is not intialized")
-	}
-	return Mongoclient.Database(dbName).Collection(collectionName)
+func GetCollection(client *mongo.Client,dbName,collectionName string)*mongo.Collection{
+	return client.Database(dbName).Collection(collectionName)
 }
 
