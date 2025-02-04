@@ -12,6 +12,10 @@ type Config struct {
 	Database string
 }
 
+type JWT struct {
+	JwtSecret string
+}
+
 func LoadConfig() *Config {
 	// Loaded the .env file
 	err := godotenv.Load()
@@ -34,5 +38,17 @@ func LoadConfig() *Config {
 	return &Config{
 		MongoURI: mongoURI,
 		Database: database,
+	}
+}
+
+func JwtLoadConfig() *JWT {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	jwtSecretKey := os.Getenv("JWT_SECRET")
+	return &JWT{
+		JwtSecret: jwtSecretKey,
 	}
 }
