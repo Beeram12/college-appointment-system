@@ -10,6 +10,7 @@ import (
 type Config struct {
 	MongoURI string
 	Database string
+	Port     string
 }
 
 type JWT struct {
@@ -35,9 +36,15 @@ func LoadConfig() *Config {
 		log.Fatal("Database name is empty")
 	}
 
+	// get the port number
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 	return &Config{
 		MongoURI: mongoURI,
 		Database: database,
+		Port:     port,
 	}
 }
 
