@@ -51,7 +51,7 @@ func (m *MongoAvailability) AddAvailability(ctx context.Context, availability mo
 
 //function to get all the availabilites of professor
 
-func (m *MongoAppointment) GetAvailabilityOfProfessor(ctx context.Context, professorId primitive.ObjectID) ([]models.Availability, error) {
+func (m *MongoAvailability) GetAvailabilityOfProfessor(ctx context.Context, professorId primitive.ObjectID) ([]models.Availability, error) {
 	var availabilites []models.Availability
 	filter := bson.M{"professor_id": professorId, "is_booked": false}
 
