@@ -3,6 +3,7 @@ module github.com/Beeram12/college-appointment-system
 go 1.23.5
 
 require (
+	github.com/go-chi/chi/v5 v5.2.1 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
