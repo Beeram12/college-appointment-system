@@ -20,13 +20,13 @@ func JWTMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		// Extracting token from the handler
-		tokenParts := strings.Split(authHeader, "")
-		if len(tokenParts) == 2 || tokenParts[0] != "Bearer" {
+		tokenParts := strings.Split(authHeader, " ")
+		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
 			http.Error(w, "Invalid authorzation format", http.StatusUnauthorized)
 			return
 		}
 		tokenString := tokenParts[1]
-		claims, err := utils.ValidatingTokens(tokenString)
+		claims, err := utils.ValidatingToken(tokenString)
 		if err != nil {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return

@@ -47,7 +47,7 @@ func GenerateToken(username, role string) (string, error) {
 }
 
 // Validating Tokens
-func ValidatingTokens(tokenString string) (*CustomClaims, error) {
+func ValidatingToken(tokenString string) (*CustomClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		// Validate the signing method
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
