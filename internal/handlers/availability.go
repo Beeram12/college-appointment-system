@@ -70,19 +70,7 @@ func (m *AvailabilityHandler) AddAvailability(w http.ResponseWriter, r *http.Req
 }
 
 // GetAvailability handles fetching the availability for a specific professor
-func (m *AvailabilityHandler) GetAvailability(w http.ResponseWriter, r *http.Request) {
-	userClaims, ok := getUserClaims(r)
-	if !ok {
-		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
-		return
-	}
-
-	// Ensuring the role is professor
-	if userClaims.Role != "student" {
-		sendErrorResponse(w, http.StatusForbidden, "Permission denied")
-		return
-	}
-
+func (m *AvailabilityHandler) GetAvailabilityOfProfessor(w http.ResponseWriter, r *http.Request) {
 	// Extract professor ID from URL path
 	vars := mux.Vars(r)
 	professorID, err := primitive.ObjectIDFromHex(vars["professor_id"])
