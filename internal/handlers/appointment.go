@@ -75,7 +75,7 @@ func (m *AppointmentHandler) CancelAppointment(w http.ResponseWriter, r *http.Re
 	w.Write([]byte("Appointment canceled successfully"))
 }
 
-func (m *AppointmentHandler) GetAppointmentsByStudentID(w http.ResponseWriter, r http.Request) {
+func (m *AppointmentHandler) GetAppointmentsByStudentID(w http.ResponseWriter, r *http.Request) {
 	userClaims, ok := r.Context().Value(middleware.UserContextKey).(*utils.CustomClaims)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
