@@ -58,15 +58,16 @@ func (m *AvailabilityHandler) AddAvailability(w http.ResponseWriter, r *http.Req
 		return
 	}
 	// parse the time slot into time.Time object
-	parsedTime, err := time.Parse("3:04 PM", req.TimeSlot)
+	parsedTime, err := time.Parse(utils.TimeLayout, req.TimeSlot)
 	if err != nil {
 		sendErrorResponse(w, http.StatusBadRequest, "Invalid time format. Use 'hh:mm AM/PM'")
 		return
 	}
 	availability := models.Availability{
-		ProfessorId: professorID,
-		TimeSlot:    parsedTime,
-		IsBooked:    false,
+		ProfessorId:       professorID,
+		TimeSlot:          parsedTime,
+		TimeSlotFormatted: parsedTime.Format(utils.TimeLayout),
+		IsBooked:          false,
 	}
 	availabilityID, err := m.Repo.AddAvailability(r.Context(), availability)
 	if err != nil {
@@ -76,6 +77,7 @@ func (m *AvailabilityHandler) AddAvailability(w http.ResponseWriter, r *http.Req
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"availability_id": availabilityID.Hex(),
+		"time_slot":       parsedTime.Format(utils.TimeLayout),
 	})
 }
 
@@ -97,7 +99,7 @@ func (m *AvailabilityHandler) GetAvailabilityOfProfessor(w http.ResponseWriter, 
 		return
 	}
 	for i := range availabilities {
-		availabilities[i].TimeSlotFormatted = availabilities[i].TimeSlot.Format("03:04 PM")
+		availabilities[i].TimeSlotFormatted = availabilities[i].TimeSlot.Format(utils.TimeLayout)
 	}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(availabilities)
