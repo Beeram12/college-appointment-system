@@ -39,7 +39,7 @@ func LoadConfig() *Config {
 	// get the port number
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = ":8080"
+		port = "8080"
 	}
 	return &Config{
 		MongoURI: mongoURI,

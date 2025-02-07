@@ -32,13 +32,13 @@ func CheckPasswordHash(password, hash string) bool {
 }
 
 // Generate tokens
-func GenerateToken(username, UserID, role string) (string, error) {
+func GenerateToken(username, role, userID string) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 
 	claims := CustomClaims{
 		Username: username,
+		UserID:   userID,
 		Role:     role,
-		UserID:   UserID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			Issuer:    "college-appointment-system",
