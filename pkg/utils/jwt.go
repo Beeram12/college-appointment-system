@@ -14,6 +14,7 @@ var jwtSecret = []byte(cfg.JwtSecret)
 
 type CustomClaims struct {
 	Username string `json:"username"`
+	UserID   string `json:"user_id"`
 	Role     string `json:"role"`
 	jwt.RegisteredClaims
 }
@@ -31,12 +32,13 @@ func CheckPasswordHash(password, hash string) bool {
 }
 
 // Generate tokens
-func GenerateToken(username, role string) (string, error) {
+func GenerateToken(username, UserID, role string) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 
 	claims := CustomClaims{
 		Username: username,
 		Role:     role,
+		UserID:   UserID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			Issuer:    "college-appointment-system",
