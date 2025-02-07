@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Beeram12/college-appointment-system/internal/middleware"
 	"github.com/Beeram12/college-appointment-system/internal/models"
@@ -56,9 +57,15 @@ func (m *AvailabilityHandler) AddAvailability(w http.ResponseWriter, r *http.Req
 		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+	// parse the time slot into time.Time object
+	parsedTime, err := time.Parse("3:04 PM", req.TimeSlot)
+	if err != nil {
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid time format. Use 'hh:mm AM/PM'")
+		return
+	}
 	availability := models.Availability{
 		ProfessorId: professorID,
-		TimeSlot:    req.TimeSlot,
+		TimeSlot:    parsedTime,
 		IsBooked:    false,
 	}
 	availabilityID, err := m.Repo.AddAvailability(r.Context(), availability)
@@ -89,7 +96,9 @@ func (m *AvailabilityHandler) GetAvailabilityOfProfessor(w http.ResponseWriter, 
 		sendErrorResponse(w, http.StatusInternalServerError, "Failed to fetch availability")
 		return
 	}
-
+	for i := range availabilities {
+		availabilities[i].TimeSlotFormatted = availabilities[i].TimeSlot.Format("03:04 PM")
+	}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(availabilities)
 }

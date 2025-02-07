@@ -26,12 +26,12 @@ func NewAvailability(db *mongo.Database) *MongoAvailability {
 // function for adding availability
 func (m *MongoAvailability) AddAvailability(ctx context.Context, availability models.Availability) (primitive.ObjectID, error) {
 	// check if the availability is already present
-	filter := m.Collection.FindOne(ctx, bson.M{
+	filter := bson.M{
 		"professor_id": availability.ProfessorId,
 		"time_slot":    availability.TimeSlot,
-	})
-
-	if filter.Err() == nil {
+	}
+	err := m.Collection.FindOne(ctx, filter).Err()
+	if err == nil {
 		return primitive.NilObjectID, fmt.Errorf("availability already exists for this time slot")
 	}
 
@@ -53,26 +53,26 @@ func (m *MongoAvailability) AddAvailability(ctx context.Context, availability mo
 
 func (m *MongoAvailability) GetAvailabilityOfProfessor(ctx context.Context, professorId primitive.ObjectID) ([]models.Availability, error) {
 	var availabilites []models.Availability
-	filter := bson.M{"professor_id": professorId, "is_booked": false}
+	filter := bson.M{
+		"professor_id": professorId,
+		"is_booked":    false,
+	}
 
-	result, err := m.Collection.Find(ctx, filter)
+	cursor, err := m.Collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
-	defer result.Close(ctx)
+	defer cursor.Close(ctx)
 	// iterating over results and decoding each document into availabilites slice
-	for {
+	for cursor.Next(ctx) {
 		var availability models.Availability
-		if !result.Next(ctx) {
-			break
-		}
-		if err := result.Decode(&availability); err != nil {
-			return nil, err
+		if err := cursor.Decode(&availability); err != nil {
+			return nil, fmt.Errorf("failed to decode availability:%w", err)
 		}
 		availabilites = append(availabilites, availability)
 	}
-	if err := result.Err(); err != nil {
-		return nil, err
+	if err := cursor.Err(); err != nil {
+		return nil, fmt.Errorf("cursor error:%w", err)
 	}
 	return availabilites, nil
 }

@@ -30,7 +30,7 @@ func (m *MongoAppointment) BookAppointment(ctx context.Context, appointment mode
 		"professor_id": appointment.ProfessorId,
 		"time_slot":    appointment.TimeSlot,
 	})
-
+	
 	if existingAppointment.Err() == nil {
 		return primitive.NilObjectID, fmt.Errorf("professor already has an appointment on this slot")
 	}
