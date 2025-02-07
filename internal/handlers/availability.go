@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/Beeram12/college-appointment-system/internal/middleware"
 	"github.com/Beeram12/college-appointment-system/internal/models"
@@ -37,32 +39,33 @@ func sendErrorResponse(w http.ResponseWriter, statusCode int, message string) {
 
 // AddAvailability handles adding availability for a professor
 func (m *AvailabilityHandler) AddAvailability(w http.ResponseWriter, r *http.Request) {
-	userClaims, ok := getUserClaims(r)
-	if !ok {
+	claims, ok := getUserClaims(r)
+	if !ok || claims.Role != "professor" {
 		sendErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
-
-	// Ensuring the role is professor
-	if userClaims.Role != "professor" {
-		sendErrorResponse(w, http.StatusForbidden, "Permission denied")
+	professorID, err := primitive.ObjectIDFromHex(claims.UserID)
+	if err != nil {
+		sendErrorResponse(w, http.StatusBadRequest, "Invalid professor ID")
 		return
 	}
-
-	var availability models.Availability
-	err := json.NewDecoder(r.Body).Decode(&availability)
-	if err != nil {
+	var req struct {
+		TimeSlot string `json:"time_slot"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		sendErrorResponse(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-
-	// Insert availability into the database
+	availability := models.Availability{
+		ProfessorId: professorID,
+		TimeSlot:    req.TimeSlot,
+		IsBooked:    false,
+	}
 	availabilityID, err := m.Repo.AddAvailability(r.Context(), availability)
 	if err != nil {
 		sendErrorResponse(w, http.StatusInternalServerError, "Failed to add availability")
 		return
 	}
-
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"availability_id": availabilityID.Hex(),
@@ -73,12 +76,13 @@ func (m *AvailabilityHandler) AddAvailability(w http.ResponseWriter, r *http.Req
 func (m *AvailabilityHandler) GetAvailabilityOfProfessor(w http.ResponseWriter, r *http.Request) {
 	// Extract professor ID from URL path
 	vars := mux.Vars(r)
-	professorID, err := primitive.ObjectIDFromHex(vars["professor_id"])
+	professorIDHex := strings.TrimSpace(vars["professor_id"])
+	professorID, err := primitive.ObjectIDFromHex(professorIDHex)
 	if err != nil {
 		sendErrorResponse(w, http.StatusBadRequest, "Invalid professor ID")
 		return
 	}
-
+	log.Printf("Converted professor ID: %v", professorID)
 	// Fetch availability from the repository
 	availabilities, err := m.Repo.GetAvailabilityOfProfessor(r.Context(), professorID)
 	if err != nil {
