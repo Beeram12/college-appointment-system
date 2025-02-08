@@ -39,7 +39,7 @@ func (m *AppointmentHandler) BookAppointment(w http.ResponseWriter, r *http.Requ
 	}
 	var req struct {
 		ProfessorId string `json:"professor_id"`
-		TimeSlot    string `json:"time_sloot"`
+		TimeSlot    string `json:"time_slot"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -56,9 +56,10 @@ func (m *AppointmentHandler) BookAppointment(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	appointment := models.Appointment{
-		ProfessorId: professorID,
-		StudentId:   studentID,
-		TimeSlot:    parsedTime,
+		ProfessorId:       professorID,
+		StudentId:         studentID,
+		TimeSlot:          parsedTime,
+		TimeSlotFormatted: parsedTime.Format(utils.TimeLayout),
 	}
 	// insert apponitment into db
 	appointmentID, err := m.Repo.BookAppointment(r.Context(), appointment)
