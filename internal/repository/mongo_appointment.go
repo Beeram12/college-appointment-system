@@ -30,7 +30,7 @@ func (m *MongoAppointment) BookAppointment(ctx context.Context, appointment mode
 		"professor_id": appointment.ProfessorId,
 		"time_slot":    appointment.TimeSlot,
 	})
-	
+
 	if existingAppointment.Err() == nil {
 		return primitive.NilObjectID, fmt.Errorf("professor already has an appointment on this slot")
 	}
@@ -76,35 +76,6 @@ func (m *MongoAppointment) GetAppointmentsOfStudent(ctx context.Context, student
 	return appointments, nil
 }
 
-// Function for getting all the appointments of professor
-func (m *MongoAppointment) GetAppointmentsOfProfessor(ctx context.Context, professorID primitive.ObjectID) ([]models.Appointment, error) {
-	var appointments []models.Appointment
-
-	// filter to find appointments with studentId
-	filter := bson.M{"professor_id": professorID}
-
-	result, err := m.Collection.Find(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-	defer result.Close(ctx)
-	// iterating over results and decodes each document into appointments slice
-	for {
-		var appointment models.Appointment
-		if !result.Next(ctx) {
-			break
-		}
-		if err := result.Decode(&appointment); err != nil {
-			return nil, err
-		}
-		appointments = append(appointments, appointment)
-	}
-	if err := result.Err(); err != nil {
-		return nil, err
-	}
-	return appointments, nil
-}
-
 // Function for cancelling the appointments
 func (m *MongoAppointment) CancelAppointment(ctx context.Context, appointmentID primitive.ObjectID) error {
 	result, err := m.Collection.DeleteOne(ctx, bson.M{
@@ -118,4 +89,18 @@ func (m *MongoAppointment) CancelAppointment(ctx context.Context, appointmentID 
 	}
 	log.Printf("Appointment with %s ID is sucessfully cancelled", appointmentID.Hex())
 	return nil
+}
+
+// to support ownership verification
+func (m *MongoAppointment) GetAppointmentByID(ctx context.Context, appointmentID primitive.ObjectID) (*models.Appointment, error) {
+	var appointment models.Appointment
+	filter := bson.M{"_id": appointmentID}
+	err := m.Collection.FindOne(ctx, filter).Decode(&appointment)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("appointment not found")
+		}
+		return nil, fmt.Errorf("failed to fetch appointment: %w", err)
+	}
+	return &appointment, nil
 }
