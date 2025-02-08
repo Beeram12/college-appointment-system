@@ -55,7 +55,7 @@ func (m *MongoAvailability) GetAvailabilityOfProfessor(ctx context.Context, prof
 	var availabilites []models.Availability
 	filter := bson.M{
 		"professor_id": professorId,
-		"is_booked":    false,
+		// "is_booked":    false,
 	}
 
 	cursor, err := m.Collection.Find(ctx, filter)

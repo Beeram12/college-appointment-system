@@ -13,13 +13,15 @@ import (
 )
 
 type MongoAppointment struct {
-	Collection *mongo.Collection
+	Collection         *mongo.Collection
+	AvailabilityRecord *mongo.Collection
 }
 
 // constructor
 func NewAppointment(db *mongo.Database) *MongoAppointment {
 	return &MongoAppointment{
-		Collection: db.Collection("appointments"),
+		Collection:         db.Collection("appointments"),
+		AvailabilityRecord: db.Collection("availability"),
 	}
 }
 
@@ -34,14 +36,40 @@ func (m *MongoAppointment) BookAppointment(ctx context.Context, appointment mode
 	if existingAppointment.Err() == nil {
 		return primitive.NilObjectID, fmt.Errorf("professor already has an appointment on this slot")
 	}
-	// If the slot is vacant
+	// check if the professor is available at the time slot
+	var availabilityRecord models.Availability
+	err := m.AvailabilityRecord.FindOne(ctx, bson.M{
+		"professor_id": appointment.ProfessorId,
+		"time_slot":    appointment.TimeSlot,
+		"is_booked":    false,
+	}).Decode(&availabilityRecord)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return primitive.NilObjectID, fmt.Errorf("professor is not available at the time slot")
+		}
+		return primitive.NilObjectID, fmt.Errorf("failed to check professor availability")
+	}
+
+	// If the slot is vacant insert into database
 	result, err := m.Collection.InsertOne(ctx, appointment)
 	if err != nil {
-		return primitive.NilObjectID, err
+		return primitive.NilObjectID, fmt.Errorf("failed to book appointment: %w", err)
 	}
 	appointmentID, good := result.InsertedID.(primitive.ObjectID)
 	if !good {
 		return primitive.NilObjectID, fmt.Errorf("failed to show insertedID")
+	}
+	// update the availability record to mark the slot is booked
+	updateResult, err := m.AvailabilityRecord.UpdateOne(ctx, bson.M{
+		"_id": availabilityRecord.Id,
+	}, bson.M{
+		"$set": bson.M{"is_booked": true},
+	})
+	if err != nil {
+		return primitive.NilObjectID, fmt.Errorf("failed to update professor availability: %w", err)
+	}
+	if updateResult.ModifiedCount == 0 {
+		return primitive.NilObjectID, fmt.Errorf("failed to mark the time slot as booked")
 	}
 	log.Printf("Appointment is booked sucessfully")
 	return appointmentID, nil
@@ -78,14 +106,36 @@ func (m *MongoAppointment) GetAppointmentsOfStudent(ctx context.Context, student
 
 // Function for cancelling the appointments
 func (m *MongoAppointment) CancelAppointment(ctx context.Context, appointmentID primitive.ObjectID) error {
+	var appointment models.Appointment
+	// fetch the appointment and verify
+	err := m.Collection.FindOne(ctx, bson.M{
+		"_id": appointmentID,
+	}).Decode(&appointment)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return errors.New("appointments not found")
+		}
+		return fmt.Errorf("failed to fetch appointment: %w", err)
+	}
+	// delete the appointment
 	result, err := m.Collection.DeleteOne(ctx, bson.M{
 		"_id": appointmentID,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to cancel appointment")
 	}
 	if result.DeletedCount == 0 {
 		return errors.New("Appointment not found")
+	}
+	// update the availability record to mark the slot as unbooked
+	_, err = m.AvailabilityRecord.UpdateOne(ctx, bson.M{
+		"professor_id": appointment.ProfessorId,
+		"time_slot":    appointment.TimeSlot,
+	}, bson.M{
+		"$set": bson.M{"is_booked": false},
+	})
+	if err != nil {
+		log.Printf("Failed to update the avialability record after the cancellation: %v", err)
 	}
 	log.Printf("Appointment with %s ID is sucessfully cancelled", appointmentID.Hex())
 	return nil
