@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/Beeram12/college-appointment-system/internal/handlers"
@@ -12,7 +11,6 @@ import (
 // SetupRoutes initializes the application routes using Gorilla Mux
 func SetupRoutes(authHandler *handlers.AuthHandler, appointmentHandler *handlers.AppointmentHandler, availabilityHandler *handlers.AvailabilityHandler) *mux.Router {
 	r := mux.NewRouter()
-	log.Println("🔹 Registering routes...")
 
 	// 🔹 Public Routes (No authentication required)
 	authRoutes := r.PathPrefix("/auth").Subrouter()

@@ -11,6 +11,7 @@ import (
 // Load config
 var cfg = config.JwtLoadConfig()
 var jwtSecret = []byte(cfg.JwtSecret)
+
 const TimeLayout = "3:04 PM"
 
 type CustomClaims struct {
