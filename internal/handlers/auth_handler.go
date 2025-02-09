@@ -46,7 +46,10 @@ func (m *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"message": "User registered sucessfully"})
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "User registered sucessfully",
+		"userId":  user.Id.Hex(),
+	})
 }
 
 // Login and generate jwt
@@ -79,5 +82,8 @@ func (m *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"token": token})
+	json.NewEncoder(w).Encode(map[string]string{
+		"token": token,
+		"role":  user.Role,
+	})
 }
