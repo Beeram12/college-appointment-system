@@ -19,7 +19,7 @@ func main() {
 	// Initialize MongoDB connection
 	client, err := db.InitMongo(cfg.MongoURI)
 	if err != nil {
-		log.Fatal("❌ Failed to initialize MongoDB:", err)
+		log.Fatal("Failed to initialize MongoDB:", err)
 	}
 	// defer client.Disconnect() // Proper cleanup when exiting
 
@@ -39,6 +39,6 @@ func main() {
 	router := routes.SetupRoutes(authHandler, appointmentHandler, availabilityHandler)
 
 	// Start the server
-	log.Printf("✅ Server running on port %s", cfg.Port)
+	log.Printf("Server running on port %s", cfg.Port)
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, router))
 }

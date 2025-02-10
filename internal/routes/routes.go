@@ -1,8 +1,6 @@
 package routes
 
 import (
-	"net/http"
-
 	"github.com/Beeram12/college-appointment-system/internal/handlers"
 	"github.com/Beeram12/college-appointment-system/internal/middleware"
 	"github.com/gorilla/mux"
@@ -19,7 +17,7 @@ func SetupRoutes(authHandler *handlers.AuthHandler, appointmentHandler *handlers
 
 	// 🔹 Private Routes (Require authentication)
 	protectedRoutes := r.PathPrefix("/").Subrouter()
-	protectedRoutes.Use(middleware.JWTMiddleware) // Apply JWT middleware
+	protectedRoutes.Use(middleware.JWTMiddleware) 
 
 	// Availability Routes
 	availabilityRoutes := protectedRoutes.PathPrefix("/availability").Subrouter()
@@ -31,12 +29,6 @@ func SetupRoutes(authHandler *handlers.AuthHandler, appointmentHandler *handlers
 	appointmentRoutes.HandleFunc("/book", appointmentHandler.BookAppointment).Methods("POST")
 	appointmentRoutes.HandleFunc("/student", appointmentHandler.GetAppointmentsByStudentID).Methods("GET")
 	appointmentRoutes.HandleFunc("/{appointment_id}", appointmentHandler.CancelAppointment).Methods("DELETE")
-
-	// 🔹 Health Check Route
-	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Server is running!"))
-	}).Methods("GET")
 
 	return r
 }
